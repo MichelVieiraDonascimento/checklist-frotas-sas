@@ -127,7 +127,7 @@ const handleSubmit = () => {
   // Logo no topo
   const img = new Image();
   img.crossOrigin = "anonymous";
-  img.src = "https://play-lh.googleusercontent.com/KuL7Hcvz6ZNxbbuwhNMHFFxQM5pDwDpHOOs2jfx_enwU74He-uxEqxEzBEt3iZ_T3Yg=w3840-h2160-rw";
+  img.src = "https://www.reginaaudeleiloes.com.br/envios/leiloes_imagem1347.png";
 
   img.onload = () => {
     doc.addImage(img, "PNG", 20, 10, 30, 30);
