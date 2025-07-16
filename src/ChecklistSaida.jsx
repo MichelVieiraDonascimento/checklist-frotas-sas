@@ -44,23 +44,20 @@ const ChecklistSaida = () => {
     setForm({ ...form, [section]: { ...form[section], [key]: value } });
   };
 
-  const handleSubmit = () => {
+const handleSubmit = () => {
+  // Salva localmente ANTES do PDF
+  const registrosSalvos = JSON.parse(localStorage.getItem("checklists") || "[]");
+  localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
+
   const doc = new jsPDF();
 
-  // Adiciona a logo no topo
-  const img = new Image();
-  img.src = "https://play-lh.googleusercontent.com/KuL7Hcvz6ZNxbbuwhNMHFFxQM5pDwDpHOOs2jfx_enwU74He-uxEqxEzBEt3iZ_T3Yg=w3840-h2160-rw";
-
-  img.onload = () => {
-    // LOGO + TÍTULO
-    doc.addImage(img, "PNG", 20, 10, 30, 30); // (x, y, largura, altura)
+  // Geração do PDF
+  const gerarPDF = () => {
     doc.setFontSize(16);
     doc.text("Checklist de Saída de Veículo", 60, 20);
     doc.setFontSize(12);
 
-    let y = 50; // Posição inicial
-
-    // DADOS PRINCIPAIS
+    let y = 50;
     doc.text(`Data: ${form.data}`, 20, y);
     doc.text(`Hora: ${form.hora}`, 120, y);
     y += 10;
@@ -70,14 +67,11 @@ const ChecklistSaida = () => {
     y += 10;
     doc.text(`KM Inicial: ${form.km}`, 20, y);
     y += 10;
-
-    // COMBUSTÍVEL E PNEUS
     doc.text(`Nível de Combustível: ${form.combustivel}`, 20, y);
     y += 10;
     doc.text(`Condição dos Pneus: ${form.pneus}`, 20, y);
     y += 10;
 
-    // LUZES
     doc.text(`Luzes: ${form.luzes}`, 20, y);
     if (form.luzes === "Não Ok" && form.luzesDetalhes) {
       Object.entries(form.luzesDetalhes).forEach(([k, v]) => {
@@ -89,7 +83,6 @@ const ChecklistSaida = () => {
     }
     y += 10;
 
-    // FREIOS
     doc.text(`Freios: ${form.freios}`, 20, y);
     if (form.freios === "Não Ok" && form.freiosDetalhes) {
       Object.entries(form.freiosDetalhes).forEach(([k, v]) => {
@@ -101,7 +94,6 @@ const ChecklistSaida = () => {
     }
     y += 10;
 
-    // DOCUMENTOS
     doc.text(`Documentos: ${form.documentos}`, 20, y);
     if (form.documentos === "Não Ok" && form.documentosDetalhes) {
       Object.entries(form.documentosDetalhes).forEach(([k, v]) => {
@@ -113,7 +105,6 @@ const ChecklistSaida = () => {
     }
     y += 10;
 
-    // OBSERVAÇÕES COM QUEBRA DE LINHA
     if (form.observacoes) {
       const obs = doc.splitTextToSize(`Observações: ${form.observacoes}`, 170);
       doc.text(obs, 20, y);
@@ -123,21 +114,30 @@ const ChecklistSaida = () => {
     y += 10;
     doc.text(`Aprovado para Saída: ${form.aprovado}`, 20, y);
 
-    // ASSINATURA
+    // Linha para assinatura
     y += 30;
-    doc.line(20, y, 100, y); // linha da assinatura
+    doc.line(20, y, 100, y);
     y += 5;
     doc.text("Assinatura do motorista", 20, y);
 
-    // SALVA PDF
     doc.save(`Checklist_${form.veiculo || "saida"}.pdf`);
+    alert("Checklist salvo localmente e PDF gerado com sucesso!");
   };
 
-  // SALVA LOCALMENTE
-  const registrosSalvos = JSON.parse(localStorage.getItem("checklists") || "[]");
-  localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
+  // Logo no topo
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = "https://play-lh.googleusercontent.com/KuL7Hcvz6ZNxbbuwhNMHFFxQM5pDwDpHOOs2jfx_enwU74He-uxEqxEzBEt3iZ_T3Yg=w3840-h2160-rw";
 
-  alert("Checklist salvo localmente e PDF gerado!");
+  img.onload = () => {
+    doc.addImage(img, "PNG", 20, 10, 30, 30);
+    gerarPDF();
+  };
+
+  img.onerror = () => {
+    console.warn("⚠️ Logo não carregada. PDF será gerado sem imagem.");
+    gerarPDF();
+  };
 };
 
 
