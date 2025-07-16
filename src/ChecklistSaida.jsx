@@ -44,8 +44,9 @@ const ChecklistSaida = () => {
     setForm({ ...form, [section]: { ...form[section], [key]: value } });
   };
 
+
+  
  const handleSubmit = () => {
-  // Salva no localStorage antes
   const registrosSalvos = JSON.parse(localStorage.getItem("checklists") || "[]");
   localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
 
@@ -53,61 +54,89 @@ const ChecklistSaida = () => {
   let y = 20;
 
   const gerarPDF = () => {
-    // Título
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text("Checklist de Saída de Veículo", 20, y);
     y += 10;
 
-    // Bloco 1: Data e Hora
-    doc.setFontSize(11);
-    doc.rect(15, y, 180, 12); // borda
-    doc.text(`Data: ${form.data || "-"}`, 20, y + 8);
-    doc.text(`Hora: ${form.hora || "-"}`, 120, y + 8);
-    y += 20;
+    // Data e Hora em caixas arredondadas com fundo
+    doc.setDrawColor(0);
+    doc.setFillColor(230, 230, 230); // cinza claro
+    doc.roundedRect(15, y, 80, 15, 4, 4, 'F');
+    doc.roundedRect(110, y, 85, 15, 4, 4, 'F');
 
-    // Bloco 2: Motorista, Veículo, KM
-    doc.rect(15, y, 180, 18);
-    doc.text(`Motorista: ${form.motorista || "-"}`, 20, y + 7);
-    doc.text(`Placa: ${form.veiculo || "-"}`, 20, y + 14);
-    doc.text(`KM Inicial: ${form.km || "-"}`, 120, y + 14);
+    doc.setFontSize(11);
+    doc.setTextColor(80);
+    doc.text(`Data: ${form.data || "-"}`, 20, y + 11);
+    doc.text(`Hora: ${form.hora || "-"}`, 115, y + 11);
+
+    y += 25;
+
+    // Motorista e Veículo (Placa)
+    doc.roundedRect(15, y, 180, 18, 4, 4, 'F');
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Motorista:", 20, y + 7);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.motorista || "-", 50, y + 7);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Placa:", 120, y + 7);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.veiculo || "-", 140, y + 7);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("KM Inicial:", 20, y + 14);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${form.km || "-"}`, 50, y + 14);
+
     y += 26;
 
-    // Bloco 3: Combustível e Pneus
-    doc.rect(15, y, 180, 12);
-    doc.text(`Combustível: ${form.combustivel || "-"}`, 20, y + 8);
-    doc.text(`Pneus: ${form.pneus || "-"}`, 120, y + 8);
-    y += 20;
-
-    // Bloco 4: Itens de verificação (Luzes, Freios, Documentos)
+    // Combustível e Pneus
+    doc.roundedRect(15, y, 180, 15, 4, 4, 'F');
     doc.setFont("helvetica", "bold");
-    doc.text("Verificações:", 20, y);
-    y += 6;
+    doc.text("Combustível:", 20, y + 11);
     doc.setFont("helvetica", "normal");
+    doc.text(form.combustivel || "-", 55, y + 11);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Pneus:", 120, y + 11);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.pneus || "-", 145, y + 11);
+
+    y += 25;
+
+    // Verificações (Luzes, Freios, Documentos)
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Verificações", 20, y);
+    y += 8;
 
     const checklistItems = [
       { label: "Luzes", valor: form.luzes },
       { label: "Freios", valor: form.freios },
       { label: "Documentos", valor: form.documentos },
     ];
+
+    doc.setFont("helvetica", "normal");
     checklistItems.forEach(({ label, valor }) => {
       doc.text(`${label}: ${valor || "-"}`, 25, y);
-      y += 6;
+      y += 7;
     });
 
-    // Detalhes dos que estão Não Ok
+    // Detalhes quando "Não Ok"
     const renderDetalhes = (titulo, detalhes) => {
       const itens = Object.entries(detalhes || {}).filter(([_, v]) => v);
       if (itens.length) {
         doc.setFont("helvetica", "bold");
-        doc.text(titulo, 20, y);
+        doc.text(titulo, 25, y);
         y += 6;
         doc.setFont("helvetica", "normal");
         itens.forEach(([k]) => {
-          doc.text(`- ${k}`, 25, y);
+          doc.text(`- ${k}`, 30, y);
           y += 5;
         });
-        y += 2;
+        y += 4;
       }
     };
 
@@ -120,30 +149,28 @@ const ChecklistSaida = () => {
       const obs = doc.splitTextToSize(form.observacoes, 170);
       doc.setFont("helvetica", "bold");
       doc.text("Observações:", 20, y);
-      y += 6;
+      y += 7;
       doc.setFont("helvetica", "normal");
       doc.text(obs, 25, y);
-      y += obs.length * 5 + 5;
+      y += obs.length * 6 + 5;
     }
 
-    // Aprovado para saída
+    // Aprovado para Saída
     doc.setFont("helvetica", "bold");
     doc.text("Aprovado para Saída:", 20, y);
     doc.setFont("helvetica", "normal");
     doc.text(form.aprovado || "-", 70, y);
-    y += 25;
+    y += 30;
 
     // Assinatura
     doc.line(20, y, 100, y);
-    y += 5;
+    y += 6;
     doc.text("Assinatura do motorista", 20, y);
 
-    // Salvar
     doc.save(`Checklist_${form.veiculo || "saida"}.pdf`);
     alert("Checklist salvo localmente e PDF gerado com sucesso!");
   };
 
-  // Gera direto sem imagem
   gerarPDF();
 };
 
