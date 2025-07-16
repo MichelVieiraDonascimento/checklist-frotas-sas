@@ -49,7 +49,7 @@ const ChecklistSaida = () => {
 
   // Adiciona a logo no topo
   const img = new Image();
-  img.src = "/logo-prefeitura.png";
+  img.src = "https://play-lh.googleusercontent.com/KuL7Hcvz6ZNxbbuwhNMHFFxQM5pDwDpHOOs2jfx_enwU74He-uxEqxEzBEt3iZ_T3Yg=w3840-h2160-rw";
 
   img.onload = () => {
     // LOGO + TÍTULO
