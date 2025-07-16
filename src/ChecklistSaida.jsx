@@ -44,78 +44,139 @@ const ChecklistSaida = () => {
     setForm({ ...form, [section]: { ...form[section], [key]: value } });
   };
 
+  
 const handleSubmit = () => {
-  // Salva localmente ANTES do PDF
+  // Salva no localStorage antes
   const registrosSalvos = JSON.parse(localStorage.getItem("checklists") || "[]");
   localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
 
   const doc = new jsPDF();
-
-  // Geração do PDF
   const gerarPDF = () => {
+    let y = 20;
+
+    // Cabeçalho com título e data
     doc.setFontSize(16);
-    doc.text("Checklist de Saída de Veículo", 60, 20);
+    doc.text("Checklist de Saída de Veículo", 60, y);
     doc.setFontSize(12);
+    doc.text(`Data: ${form.data}`, 150, y);
+    y += 10;
+    doc.text(`Hora: ${form.hora}`, 150, y);
+    y += 20;
 
-    let y = 50;
-    doc.text(`Data: ${form.data}`, 20, y);
-    doc.text(`Hora: ${form.hora}`, 120, y);
-    y += 10;
-    doc.text(`Motorista: ${form.motorista}`, 20, y);
-    y += 10;
-    doc.text(`Veículo (Placa): ${form.veiculo}`, 20, y);
-    y += 10;
-    doc.text(`KM Inicial: ${form.km}`, 20, y);
-    y += 10;
-    doc.text(`Nível de Combustível: ${form.combustivel}`, 20, y);
-    y += 10;
-    doc.text(`Condição dos Pneus: ${form.pneus}`, 20, y);
+    // Motorista e veículo
+    doc.setFont("helvetica", "bold");
+    doc.text("Motorista:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.motorista || "-", 50, y);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Placa:", 120, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.veiculo || "-", 140, y);
     y += 10;
 
-    doc.text(`Luzes: ${form.luzes}`, 20, y);
+    doc.setFont("helvetica", "bold");
+    doc.text("KM Inicial:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${form.km || "-"}`, 50, y);
+    y += 15;
+
+    // Combustível e pneus
+    doc.setFont("helvetica", "bold");
+    doc.text("Nível de Combustível:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.combustivel || "-", 70, y);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Condição dos Pneus:", 120, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.pneus || "-", 165, y);
+    y += 15;
+
+    // Itens principais
+    doc.setFont("helvetica", "bold");
+    doc.text("Luzes:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.luzes || "-", 45, y);
+    y += 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Freios:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.freios || "-", 45, y);
+    y += 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Documentos:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.documentos || "-", 55, y);
+    y += 15;
+
+    // Detalhes “Não OK”
     if (form.luzes === "Não Ok" && form.luzesDetalhes) {
-      Object.entries(form.luzesDetalhes).forEach(([k, v]) => {
-        if (v) {
-          y += 7;
-          doc.text(` - ${k}`, 25, y);
-        }
-      });
+      const detalhes = Object.entries(form.luzesDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
+      if (detalhes.length) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Luzes com problema:", 20, y);
+        y += 7;
+        doc.setFont("helvetica", "normal");
+        detalhes.forEach((d) => {
+          doc.text(d, 25, y);
+          y += 6;
+        });
+        y += 4;
+      }
     }
-    y += 10;
 
-    doc.text(`Freios: ${form.freios}`, 20, y);
     if (form.freios === "Não Ok" && form.freiosDetalhes) {
-      Object.entries(form.freiosDetalhes).forEach(([k, v]) => {
-        if (v) {
-          y += 7;
-          doc.text(` - ${k}`, 25, y);
-        }
-      });
+      const detalhes = Object.entries(form.freiosDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
+      if (detalhes.length) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Freios com problema:", 20, y);
+        y += 7;
+        doc.setFont("helvetica", "normal");
+        detalhes.forEach((d) => {
+          doc.text(d, 25, y);
+          y += 6;
+        });
+        y += 4;
+      }
     }
-    y += 10;
 
-    doc.text(`Documentos: ${form.documentos}`, 20, y);
     if (form.documentos === "Não Ok" && form.documentosDetalhes) {
-      Object.entries(form.documentosDetalhes).forEach(([k, v]) => {
-        if (v) {
-          y += 7;
-          doc.text(` - ${k}`, 25, y);
-        }
-      });
+      const detalhes = Object.entries(form.documentosDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
+      if (detalhes.length) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Documentos ausentes:", 20, y);
+        y += 7;
+        doc.setFont("helvetica", "normal");
+        detalhes.forEach((d) => {
+          doc.text(d, 25, y);
+          y += 6;
+        });
+        y += 4;
+      }
     }
-    y += 10;
 
+    // Observações
     if (form.observacoes) {
       const obs = doc.splitTextToSize(`Observações: ${form.observacoes}`, 170);
-      doc.text(obs, 20, y);
-      y += obs.length * 10;
+      doc.setFont("helvetica", "bold");
+      doc.text("Observações:", 20, y);
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.text(obs, 25, y);
+      y += obs.length * 6 + 5;
     }
 
-    y += 10;
-    doc.text(`Aprovado para Saída: ${form.aprovado}`, 20, y);
-
-    // Linha para assinatura
+    // Aprovado
+    doc.setFont("helvetica", "bold");
+    doc.text(`Aprovado para Saída:`, 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(form.aprovado || "-", 80, y);
     y += 30;
+
+    // Assinatura
     doc.line(20, y, 100, y);
     y += 5;
     doc.text("Assinatura do motorista", 20, y);
@@ -127,7 +188,7 @@ const handleSubmit = () => {
   // Logo no topo
   const img = new Image();
   img.crossOrigin = "anonymous";
-  img.src = "https://www.reginaaudeleiloes.com.br/envios/leiloes_imagem1347.png";
+  img.src = "https://play-lh.googleusercontent.com/KuL7Hcvz6ZNxbbuwhNMHFFxQM5pDwDpHOOs2jfx_enwU74He-uxEqxEzBEt3iZ_T3Yg=w3840-h2160-rw";
 
   img.onload = () => {
     doc.addImage(img, "PNG", 20, 10, 30, 30);
@@ -139,6 +200,7 @@ const handleSubmit = () => {
     gerarPDF();
   };
 };
+
 
 
   const renderLuzesDetalhes = () =>
