@@ -51,10 +51,9 @@ const handleSubmit = () => {
   localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
 
   const doc = new jsPDF();
+
   const gerarPDF = () => {
     let y = 20;
-
-    // Cabeçalho com título e data
     doc.setFontSize(16);
     doc.text("Checklist de Saída de Veículo", 60, y);
     doc.setFontSize(12);
@@ -62,38 +61,31 @@ const handleSubmit = () => {
     y += 10;
     doc.text(`Hora: ${form.hora}`, 150, y);
     y += 20;
-
-    // Motorista e veículo
     doc.setFont("helvetica", "bold");
     doc.text("Motorista:", 20, y);
     doc.setFont("helvetica", "normal");
     doc.text(form.motorista || "-", 50, y);
-
     doc.setFont("helvetica", "bold");
     doc.text("Placa:", 120, y);
     doc.setFont("helvetica", "normal");
     doc.text(form.veiculo || "-", 140, y);
     y += 10;
-
     doc.setFont("helvetica", "bold");
     doc.text("KM Inicial:", 20, y);
     doc.setFont("helvetica", "normal");
     doc.text(`${form.km || "-"}`, 50, y);
     y += 15;
 
-    // Combustível e pneus
     doc.setFont("helvetica", "bold");
     doc.text("Nível de Combustível:", 20, y);
     doc.setFont("helvetica", "normal");
     doc.text(form.combustivel || "-", 70, y);
-
     doc.setFont("helvetica", "bold");
     doc.text("Condição dos Pneus:", 120, y);
     doc.setFont("helvetica", "normal");
     doc.text(form.pneus || "-", 165, y);
     y += 15;
 
-    // Itens principais
     doc.setFont("helvetica", "bold");
     doc.text("Luzes:", 20, y);
     doc.setFont("helvetica", "normal");
@@ -112,7 +104,6 @@ const handleSubmit = () => {
     doc.text(form.documentos || "-", 55, y);
     y += 15;
 
-    // Detalhes “Não OK”
     if (form.luzes === "Não Ok" && form.luzesDetalhes) {
       const detalhes = Object.entries(form.luzesDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
       if (detalhes.length) {
@@ -158,7 +149,6 @@ const handleSubmit = () => {
       }
     }
 
-    // Observações
     if (form.observacoes) {
       const obs = doc.splitTextToSize(`Observações: ${form.observacoes}`, 170);
       doc.setFont("helvetica", "bold");
@@ -169,14 +159,12 @@ const handleSubmit = () => {
       y += obs.length * 6 + 5;
     }
 
-    // Aprovado
     doc.setFont("helvetica", "bold");
     doc.text(`Aprovado para Saída:`, 20, y);
     doc.setFont("helvetica", "normal");
     doc.text(form.aprovado || "-", 80, y);
     y += 30;
 
-    // Assinatura
     doc.line(20, y, 100, y);
     y += 5;
     doc.text("Assinatura do motorista", 20, y);
@@ -185,21 +173,10 @@ const handleSubmit = () => {
     alert("Checklist salvo localmente e PDF gerado com sucesso!");
   };
 
-  // Logo no topo
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = "https://play-lh.googleusercontent.com/KuL7Hcvz6ZNxbbuwhNMHFFxQM5pDwDpHOOs2jfx_enwU74He-uxEqxEzBEt3iZ_T3Yg=w3840-h2160-rw";
-
-  img.onload = () => {
-    doc.addImage(img, "PNG", 20, 10, 30, 30);
-    gerarPDF();
-  };
-
-  img.onerror = () => {
-    console.warn("⚠️ Logo não carregada. PDF será gerado sem imagem.");
-    gerarPDF();
-  };
+  // Gera direto sem imagem (TESTE)
+  gerarPDF();
 };
+
 
 
 
