@@ -167,7 +167,7 @@ const handleSubmit = () => {
 
     doc.line(20, y, 100, y);
     y += 5;
-    doc.text("Assinatura do motorista", 20, y);
+    doc.text("Assinatura do Gerente", 20, y);
 
     doc.save(`Checklist_${form.veiculo || "saida"}.pdf`);
     alert("Checklist salvo localmente e PDF gerado com sucesso!");
