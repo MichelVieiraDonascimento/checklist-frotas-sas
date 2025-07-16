@@ -45,28 +45,101 @@ const ChecklistSaida = () => {
   };
 
   const handleSubmit = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("Checklist de Saída de Veículo", 20, 20);
+  const doc = new jsPDF();
 
-    let y = 30;
-    Object.entries(form).forEach(([key, value]) => {
-      if (typeof value === "object") {
-        doc.text(`${key.toUpperCase()}:`, 20, y);
-        y += 10;
-        Object.entries(value).forEach(([subkey, subvalue]) => {
-          doc.text(` - ${subkey}: ${subvalue ? "Sim" : "Não"}`, 25, y);
-          y += 10;
-        });
-      } else {
-        doc.text(`${key}: ${value}`, 20, y);
-        y += 10;
-      }
-    });
+  // Adiciona a logo no topo
+  const img = new Image();
+  img.src = "/logo-prefeitura.png";
 
+  img.onload = () => {
+    // LOGO + TÍTULO
+    doc.addImage(img, "PNG", 20, 10, 30, 30); // (x, y, largura, altura)
+    doc.setFontSize(16);
+    doc.text("Checklist de Saída de Veículo", 60, 20);
+    doc.setFontSize(12);
+
+    let y = 50; // Posição inicial
+
+    // DADOS PRINCIPAIS
+    doc.text(`Data: ${form.data}`, 20, y);
+    doc.text(`Hora: ${form.hora}`, 120, y);
+    y += 10;
+    doc.text(`Motorista: ${form.motorista}`, 20, y);
+    y += 10;
+    doc.text(`Veículo (Placa): ${form.veiculo}`, 20, y);
+    y += 10;
+    doc.text(`KM Inicial: ${form.km}`, 20, y);
+    y += 10;
+
+    // COMBUSTÍVEL E PNEUS
+    doc.text(`Nível de Combustível: ${form.combustivel}`, 20, y);
+    y += 10;
+    doc.text(`Condição dos Pneus: ${form.pneus}`, 20, y);
+    y += 10;
+
+    // LUZES
+    doc.text(`Luzes: ${form.luzes}`, 20, y);
+    if (form.luzes === "Não Ok" && form.luzesDetalhes) {
+      Object.entries(form.luzesDetalhes).forEach(([k, v]) => {
+        if (v) {
+          y += 7;
+          doc.text(` - ${k}`, 25, y);
+        }
+      });
+    }
+    y += 10;
+
+    // FREIOS
+    doc.text(`Freios: ${form.freios}`, 20, y);
+    if (form.freios === "Não Ok" && form.freiosDetalhes) {
+      Object.entries(form.freiosDetalhes).forEach(([k, v]) => {
+        if (v) {
+          y += 7;
+          doc.text(` - ${k}`, 25, y);
+        }
+      });
+    }
+    y += 10;
+
+    // DOCUMENTOS
+    doc.text(`Documentos: ${form.documentos}`, 20, y);
+    if (form.documentos === "Não Ok" && form.documentosDetalhes) {
+      Object.entries(form.documentosDetalhes).forEach(([k, v]) => {
+        if (v) {
+          y += 7;
+          doc.text(` - ${k}`, 25, y);
+        }
+      });
+    }
+    y += 10;
+
+    // OBSERVAÇÕES COM QUEBRA DE LINHA
+    if (form.observacoes) {
+      const obs = doc.splitTextToSize(`Observações: ${form.observacoes}`, 170);
+      doc.text(obs, 20, y);
+      y += obs.length * 10;
+    }
+
+    y += 10;
+    doc.text(`Aprovado para Saída: ${form.aprovado}`, 20, y);
+
+    // ASSINATURA
+    y += 30;
+    doc.line(20, y, 100, y); // linha da assinatura
+    y += 5;
+    doc.text("Assinatura do motorista", 20, y);
+
+    // SALVA PDF
     doc.save(`Checklist_${form.veiculo || "saida"}.pdf`);
-    alert("Checklist enviado com sucesso e PDF gerado!");
   };
+
+  // SALVA LOCALMENTE
+  const registrosSalvos = JSON.parse(localStorage.getItem("checklists") || "[]");
+  localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
+
+  alert("Checklist salvo localmente e PDF gerado!");
+};
+
 
   const renderLuzesDetalhes = () =>
     form.luzes === "Não Ok" && (
