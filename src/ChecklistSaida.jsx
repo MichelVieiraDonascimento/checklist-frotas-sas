@@ -44,136 +44,106 @@ const ChecklistSaida = () => {
     setForm({ ...form, [section]: { ...form[section], [key]: value } });
   };
 
-  
-const handleSubmit = () => {
+ const handleSubmit = () => {
   // Salva no localStorage antes
   const registrosSalvos = JSON.parse(localStorage.getItem("checklists") || "[]");
   localStorage.setItem("checklists", JSON.stringify([...registrosSalvos, form]));
 
   const doc = new jsPDF();
+  let y = 20;
 
   const gerarPDF = () => {
-    let y = 20;
+    // Título
     doc.setFontSize(16);
-    doc.text("Checklist de Saída de Veículo", 60, y);
-    doc.setFontSize(12);
-    doc.text(`Data: ${form.data}`, 150, y);
+    doc.setFont("helvetica", "bold");
+    doc.text("Checklist de Saída de Veículo", 20, y);
     y += 10;
-    doc.text(`Hora: ${form.hora}`, 150, y);
+
+    // Bloco 1: Data e Hora
+    doc.setFontSize(11);
+    doc.rect(15, y, 180, 12); // borda
+    doc.text(`Data: ${form.data || "-"}`, 20, y + 8);
+    doc.text(`Hora: ${form.hora || "-"}`, 120, y + 8);
     y += 20;
-    doc.setFont("helvetica", "bold");
-    doc.text("Motorista:", 20, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(form.motorista || "-", 50, y);
-    doc.setFont("helvetica", "bold");
-    doc.text("Placa:", 120, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(form.veiculo || "-", 140, y);
-    y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.text("KM Inicial:", 20, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${form.km || "-"}`, 50, y);
-    y += 15;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Nível de Combustível:", 20, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(form.combustivel || "-", 70, y);
-    doc.setFont("helvetica", "bold");
-    doc.text("Condição dos Pneus:", 120, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(form.pneus || "-", 165, y);
-    y += 15;
+    // Bloco 2: Motorista, Veículo, KM
+    doc.rect(15, y, 180, 18);
+    doc.text(`Motorista: ${form.motorista || "-"}`, 20, y + 7);
+    doc.text(`Placa: ${form.veiculo || "-"}`, 20, y + 14);
+    doc.text(`KM Inicial: ${form.km || "-"}`, 120, y + 14);
+    y += 26;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Luzes:", 20, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(form.luzes || "-", 45, y);
-    y += 10;
+    // Bloco 3: Combustível e Pneus
+    doc.rect(15, y, 180, 12);
+    doc.text(`Combustível: ${form.combustivel || "-"}`, 20, y + 8);
+    doc.text(`Pneus: ${form.pneus || "-"}`, 120, y + 8);
+    y += 20;
 
+    // Bloco 4: Itens de verificação (Luzes, Freios, Documentos)
     doc.setFont("helvetica", "bold");
-    doc.text("Freios:", 20, y);
+    doc.text("Verificações:", 20, y);
+    y += 6;
     doc.setFont("helvetica", "normal");
-    doc.text(form.freios || "-", 45, y);
-    y += 10;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Documentos:", 20, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(form.documentos || "-", 55, y);
-    y += 15;
+    const checklistItems = [
+      { label: "Luzes", valor: form.luzes },
+      { label: "Freios", valor: form.freios },
+      { label: "Documentos", valor: form.documentos },
+    ];
+    checklistItems.forEach(({ label, valor }) => {
+      doc.text(`${label}: ${valor || "-"}`, 25, y);
+      y += 6;
+    });
 
-    if (form.luzes === "Não Ok" && form.luzesDetalhes) {
-      const detalhes = Object.entries(form.luzesDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
-      if (detalhes.length) {
+    // Detalhes dos que estão Não Ok
+    const renderDetalhes = (titulo, detalhes) => {
+      const itens = Object.entries(detalhes || {}).filter(([_, v]) => v);
+      if (itens.length) {
         doc.setFont("helvetica", "bold");
-        doc.text("Luzes com problema:", 20, y);
-        y += 7;
+        doc.text(titulo, 20, y);
+        y += 6;
         doc.setFont("helvetica", "normal");
-        detalhes.forEach((d) => {
-          doc.text(d, 25, y);
-          y += 6;
+        itens.forEach(([k]) => {
+          doc.text(`- ${k}`, 25, y);
+          y += 5;
         });
-        y += 4;
+        y += 2;
       }
-    }
+    };
 
-    if (form.freios === "Não Ok" && form.freiosDetalhes) {
-      const detalhes = Object.entries(form.freiosDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
-      if (detalhes.length) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Freios com problema:", 20, y);
-        y += 7;
-        doc.setFont("helvetica", "normal");
-        detalhes.forEach((d) => {
-          doc.text(d, 25, y);
-          y += 6;
-        });
-        y += 4;
-      }
-    }
+    if (form.luzes === "Não Ok") renderDetalhes("Luzes com problema:", form.luzesDetalhes);
+    if (form.freios === "Não Ok") renderDetalhes("Freios com problema:", form.freiosDetalhes);
+    if (form.documentos === "Não Ok") renderDetalhes("Documentos ausentes:", form.documentosDetalhes);
 
-    if (form.documentos === "Não Ok" && form.documentosDetalhes) {
-      const detalhes = Object.entries(form.documentosDetalhes).filter(([_, v]) => v).map(([k]) => `- ${k}`);
-      if (detalhes.length) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Documentos ausentes:", 20, y);
-        y += 7;
-        doc.setFont("helvetica", "normal");
-        detalhes.forEach((d) => {
-          doc.text(d, 25, y);
-          y += 6;
-        });
-        y += 4;
-      }
-    }
-
+    // Observações
     if (form.observacoes) {
-      const obs = doc.splitTextToSize(`Observações: ${form.observacoes}`, 170);
+      const obs = doc.splitTextToSize(form.observacoes, 170);
       doc.setFont("helvetica", "bold");
       doc.text("Observações:", 20, y);
-      y += 7;
+      y += 6;
       doc.setFont("helvetica", "normal");
       doc.text(obs, 25, y);
-      y += obs.length * 6 + 5;
+      y += obs.length * 5 + 5;
     }
 
+    // Aprovado para saída
     doc.setFont("helvetica", "bold");
-    doc.text(`Aprovado para Saída:`, 20, y);
+    doc.text("Aprovado para Saída:", 20, y);
     doc.setFont("helvetica", "normal");
-    doc.text(form.aprovado || "-", 80, y);
-    y += 30;
+    doc.text(form.aprovado || "-", 70, y);
+    y += 25;
 
+    // Assinatura
     doc.line(20, y, 100, y);
     y += 5;
-    doc.text("Assinatura do Gerente", 20, y);
+    doc.text("Assinatura do motorista", 20, y);
 
+    // Salvar
     doc.save(`Checklist_${form.veiculo || "saida"}.pdf`);
     alert("Checklist salvo localmente e PDF gerado com sucesso!");
   };
 
-  // Gera direto sem imagem (TESTE)
+  // Gera direto sem imagem
   gerarPDF();
 };
 
